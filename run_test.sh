@@ -28,7 +28,7 @@ make clean
 make
 
 # Start bots in background.
-for i in {1..${NUM_BOTS}}
+for i in $(eval echo {1..$NUM_BOTS})
 do
   sudo ./sendRawEthRandom &
 done

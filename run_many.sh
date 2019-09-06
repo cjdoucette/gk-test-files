@@ -46,7 +46,8 @@ do
     client_gibps=$(echo ${client_stats} | awk '{ print $2 }')
 
     # Output statistics for this experiment.
-    echo "${i} | 2^${j} | ${gk_mpps} | ${gk_gibps} | ${client_mpps} | ${client_gibps} |" >> ${EXP_OUTPUT}.log
+    echo "|  ${i}  |  2^${j}  |  ${gk_mpps}  |  ${gk_gibps}  |  ${client_mpps}  |  ${client_gibps}  |" >> ${EXP_OUTPUT}.log
+    sleep 5
   done
   echo "|        |            |              |              |                  |                  |" >> ${EXP_OUTPUT}.log
 done
