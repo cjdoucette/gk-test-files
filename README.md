@@ -13,7 +13,7 @@ and starts the bots. It terminates after a configurable amount of time.
 
 The parameters to the script are:
 
-    ./run_test.sh experiment_name table_exponent num_lcores num_bots experiment_length trial_num"
+    ./run_test.sh experiment_name table_exponent num_lcores num_bots experiment_length trial_num
 
 Where:
 
@@ -26,7 +26,7 @@ Where:
 
 For example, you might run it with:
 
-    ./run_test.sh patch1 10 1 8 300 1"
+    ./run_test.sh patch1 10 1 8 300 1
 
 The script will produce log files in the gatekeeper directory using
 the experiment name as a directory name. It will name the logs using
@@ -40,8 +40,16 @@ numbers of lcores and multiple table sizes, but these for loops can be
 changed to run any different parameters for `run_test.sh`.
 
 The script changes the gatekeeper configuration files as needed and
-repeatedly runs experiments. It also collects client and Gatekeeper
-statistics and outputs them to a file in the form of a Markdown table.
+repeatedly runs experiments. By default, it changes the `n_lcores`
+variable and the `flow_ht_size` variable (and has nested for loops to
+iterate over values for these variables), but it could be changed to
+fit whatever variable you are changing for your experiments. If you do
+change them, you will likely want to pass those variable values to
+`run_test.sh` as well.
+
+The script also collects client and Gatekeeper statistics and outputs them
+to a file in the form of a Markdown table. The name of the output file
+is {experiment_name}.log.
 
 The script has only one parameter: the experiment name. For example:
 
