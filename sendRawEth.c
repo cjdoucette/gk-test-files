@@ -103,9 +103,16 @@ int main(int argc, char *argv[])
 	unsigned long long i = 0;
 	uint32_t *src_addr = (uint32_t *)(bytes + 26);
 	while (1) {
+		/*
+		 * Round robin through IP addresses to hit all
+		 * lcores; see Gatekeeper startup output to
+		 * find which addresses 10.0.0.x hit which lcores,
+		 * and fill in the array with x below.
+		 * Change the number of samples according to how
+		 * many lcores there are.
+		 */
 		int samples[4] = { 0xf6, 0xf7, 0xf8, 0xf9 };
 		bytes[29] = samples[i % 4];
-		*src_addr = rand();
 		if (sendto(sockfd, bytes, sizeof(bytes), 0,
 				(struct sockaddr*)&socket_address,
 				sizeof(struct sockaddr_ll)) < 0)
