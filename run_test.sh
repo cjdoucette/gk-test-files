@@ -28,6 +28,7 @@ make clean
 make
 
 # Start bots in background.
+sudo pkill sendRawEth
 for i in $(eval echo {1..$NUM_BOTS})
 do
   sudo ./sendRawEthRandom &
