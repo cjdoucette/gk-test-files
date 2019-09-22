@@ -2,6 +2,7 @@
 
 EXP_NAME=$1
 EXP_OUTPUT=../gk-test-files/$1
+NUM_BOTS=16
 
 cd ../gatekeeper
 
@@ -21,7 +22,7 @@ echo "|--------|------------|--------------|---------------|------------------|-
 for i in 1 2 3
 do
   # Loop over table sizes.
-  for j in 10 15 20
+  for j in 15 20 22
   do
     # Move temporary files into place and overwrite parameters as needed.
     cp lua/gk.lua.bak lua/gk.lua
@@ -32,16 +33,16 @@ do
     # Run experiment.
     pushd .
     cd ../gk-test-files
-    sudo ./run_test.sh ${EXP_NAME} ${j} ${i} 8 300 1
+    sudo ./run_test.sh ${EXP_NAME} ${j} ${i} ${NUM_BOTS} 300 1
 
     # Collect GK statistics.
-    gk_stats=$(sudo python3 process_gk_stats.py ../gatekeeper/${EXP_NAME}/gk_2.${j}_${i}lcore_8bots_1.log)
+    gk_stats=$(sudo python3 process_gk_stats.py ../gatekeeper/${EXP_NAME}/gk_2.${j}_${i}lcore_${NUM_BOTS}bots_1.log)
     gk_mpps=$(echo ${gk_stats} | awk '{ print $1 }')
     gk_gibps=$(echo ${gk_stats} | awk '{ print $2 }')
 
     popd
     # Collect client statistics.
-    client_stats=$(sudo cat ${EXP_NAME}/stats_2.${j}_${i}lcore_8bots_1.txt | grep "TX packets" | awk 'NR > 1 { printf "%0.2f\t %0.2f\n", ($3 - prev1)/1000/1000/300, ($5 - prev2)*8/1024/1024/1024/300 } { prev1 = $3 } { prev2 = $5 }')
+    client_stats=$(sudo cat ${EXP_NAME}/stats_2.${j}_${i}lcore_${NUM_BOTS}bots_1.txt | grep "TX packets" | awk 'NR > 1 { printf "%0.2f\t %0.2f\n", ($3 - prev1)/1000/1000/300, ($5 - prev2)*8/1024/1024/1024/300 } { prev1 = $3 } { prev2 = $5 }')
     client_mpps=$(echo ${client_stats} | awk '{ print $1 }')
     client_gibps=$(echo ${client_stats} | awk '{ print $2 }')
 
