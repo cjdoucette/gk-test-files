@@ -42,10 +42,10 @@ do
     gk_mpps_99=$(echo ${stats} | awk '{ print $3 }')
     gk_mpps_mean=$(echo ${stats} | awk '{ print $4 }')
 
-    cli_mpps_0=$(echo ${stats} | awk '{ print $1 }')
-    cli_mpps_50=$(echo ${stats} | awk '{ print $2 }')
-    cli_mpps_99=$(echo ${stats} | awk '{ print $3 }')
-    cli_mpps_mean=$(echo ${stats} | awk '{ print $4 }')
+    cli_mpps_0=$(echo ${stats} | awk '{ print $5 }')
+    cli_mpps_50=$(echo ${stats} | awk '{ print $6 }')
+    cli_mpps_99=$(echo ${stats} | awk '{ print $7 }')
+    cli_mpps_mean=$(echo ${stats} | awk '{ print $8 }')
 
     popd
 

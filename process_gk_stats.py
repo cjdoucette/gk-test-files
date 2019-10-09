@@ -82,7 +82,7 @@ gk_mpps_50 = round(npkts_to_mpps(numpy.percentile(gk_total_num_packets, 50), 30)
 gk_mpps_99 = round(npkts_to_mpps(numpy.percentile(gk_total_num_packets, 99), 30), 2)
 gk_mpps_mean = round(npkts_to_mpps(float(sum(gk_total_num_packets)) / len(gk_total_num_packets), 30), 2)
 
-print(cli_total_num_packets)
+#print(cli_total_num_packets)
 cli_mpps_0 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 0), 1), 2)
 cli_mpps_50 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 50), 1), 2)
 cli_mpps_99 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 99), 1), 2)
