@@ -34,10 +34,13 @@ do
   sudo ./sendRawEthRandom &
 done
 
-# Get stats, wait, end experiment.
-ifconfig | head -8 > ../gatekeeper/${EXP_NAME}/stats_2.${TABLE_EXP}_${NUM_LCORES}lcore_${NUM_BOTS}bots_${TRIAL_NUM}.txt
-sleep ${EXP_LEN}
-sudo pkill sendRawEth
+# Get stats every second until the experiment ends.
+for i in $(eval echo {1..$EXP_LEN})
+do
+  ifconfig | head -8 >> ../gatekeeper/${EXP_NAME}/stats_2.${TABLE_EXP}_${NUM_LCORES}lcore_${NUM_BOTS}bots_${TRIAL_NUM}.txt
+  sleep 1
+done
 ifconfig | head -8 >> ../gatekeeper/${EXP_NAME}/stats_2.${TABLE_EXP}_${NUM_LCORES}lcore_${NUM_BOTS}bots_${TRIAL_NUM}.txt
 
+sudo pkill sendRawEth
 sudo pkill gatekeeper

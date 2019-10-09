@@ -1,6 +1,14 @@
 # gk-test-files
 Files for stress testing the GK block
 
+## Dependencies
+
+To generate statistics, you will need `python3` and `numpy`:
+
+    # apt install python3
+    # apt install pip3
+    $ pip3 install numpy
+
 ## How to use
 
 There are two main scripts: `run_test.sh` and `run_many.sh`.

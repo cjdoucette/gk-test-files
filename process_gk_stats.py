@@ -1,5 +1,6 @@
 import sys
 import statistics
+import numpy
 
 def npkts_to_mpps(npkts, sec):
     return npkts / float(sec) / 1000. / 1000.
@@ -7,12 +8,24 @@ def npkts_to_mpps(npkts, sec):
 def nbytes_to_gibps(nbytes, sec):
     return nbytes / float(sec) * 8. / 1024. / 1024. / 1024.
 
-if len(sys.argv) != 2:
+if len(sys.argv) != 3:
     sys.exit()
 
+#
+# Process GK block measurements.
+#
+
+# Totals of packets and bytes for each measurement, i.e. index 0
+# holds the total packets and bytes processed across all lcores at
+# the first measurement, etc.
+gk_total_num_packets = []
+gk_total_num_bytes = []
+
 with open(sys.argv[1]) as f:
-    total_num_packets = []
-    total_num_bytes = []
+    # Number of packets and bytes for measurement currently being
+    # inspected. We need a list because when there are multiple
+    # lcores, the measurements are output by Gatekeeper on separate
+    # lines, per-lcore.
     cur_num_packets = []
     cur_num_bytes = []
     stats = {}
@@ -23,24 +36,63 @@ with open(sys.argv[1]) as f:
            n_pkt = int(tokens[13][:-1])
            n_byt = int(tokens[16][:-1])
            if lcore not in stats:
+               # Haven't seen this lcore for this measurement.
                cur_num_packets.append(n_pkt)
                cur_num_bytes.append(n_byt)
                stats[lcore] = 1
            else:
-               total_num_packets.append(sum(cur_num_packets))
-               total_num_bytes.append(sum(cur_num_bytes))
+               # We have collected stats for all lcores for this measurement.
+               gk_total_num_packets.append(sum(cur_num_packets))
+               gk_total_num_bytes.append(sum(cur_num_bytes))
                cur_num_packets = []
                cur_num_bytes = []
                stats = {}
 
-# Throw away first and last measurements.
-total_num_packets = total_num_packets[1:-1]
-total_num_bytes = total_num_bytes[1:-1]
-#print("Avg Mpps Avg Gibps")
-avg_mpps = npkts_to_mpps(float(sum(total_num_packets)) / len(total_num_packets), 30)
-avg_gibps = nbytes_to_gibps(float(sum(total_num_bytes)) / len(total_num_bytes), 30)
-print(str(round(avg_mpps, 2)) + "\t " + str(round(avg_gibps, 2)))
-#print("Std Mpps Std Gibps")
-#std_mpps = npkts_to_mpps(statistics.stdev(total_num_packets), 30)
-#std_gibps = nbytes_to_gibps(statistics.stdev(total_num_bytes), 30)
-#print(str(round(std_mpps, 2)) + "\t " + str(round(std_gibps, 2)))
+#
+# Process client measurements.
+#
+
+# Totals of packets and bytes for each measurement, i.e. index 0
+# holds the total packets and bytes sent at the first measurement, etc.
+cli_total_num_packets = []
+cli_total_num_bytes = []
+
+with open(sys.argv[2]) as f:
+    first = True
+    prev_pkt = None
+    prev_byt = None
+    for line in f:
+        if line.startswith("        TX packets"):
+            tokens = line.split();
+            n_pkt = int(tokens[2])
+            n_byt = int(tokens[4])
+            if first:
+                prev_pkt = n_pkt
+                prev_byt = n_byt
+                first = False
+                continue
+            cli_total_num_packets.append(n_pkt - prev_pkt)
+            cli_total_num_bytes.append(n_byt - prev_byt)
+            prev_pkt = n_pkt
+            prev_byt = n_byt
+
+# Note: currently only outputting packet measurements, not bytes.
+gk_mpps_0 = round(npkts_to_mpps(numpy.percentile(gk_total_num_packets, 0), 30), 2)
+gk_mpps_50 = round(npkts_to_mpps(numpy.percentile(gk_total_num_packets, 50), 30), 2)
+gk_mpps_99 = round(npkts_to_mpps(numpy.percentile(gk_total_num_packets, 99), 30), 2)
+gk_mpps_mean = round(npkts_to_mpps(float(sum(gk_total_num_packets)) / len(gk_total_num_packets), 30), 2)
+
+print(cli_total_num_packets)
+cli_mpps_0 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 0), 1), 2)
+cli_mpps_50 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 50), 1), 2)
+cli_mpps_99 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 99), 1), 2)
+cli_mpps_mean = round(npkts_to_mpps(float(sum(cli_total_num_packets)) / len(cli_total_num_packets), 1), 2)
+
+print(str(gk_mpps_0) + "\t" +
+    str(gk_mpps_50) + "\t" +
+    str(gk_mpps_99) + "\t" +
+    str(gk_mpps_mean) + "\t" +
+    str(cli_mpps_0) + "\t" +
+    str(cli_mpps_50) + "\t" +
+    str(cli_mpps_99) + "\t" +
+    str(cli_mpps_mean))
