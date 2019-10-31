@@ -5,6 +5,8 @@
  *  (at your option) any later version.
  */
 
+#define _GNU_SOURCE
+
 #include <arpa/inet.h>
 #include <linux/if_packet.h>
 #include <stdio.h>
@@ -14,6 +16,10 @@
 #include <sys/socket.h>
 #include <net/if.h>
 #include <netinet/ether.h>
+
+#include <sched.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 #define MY_DEST_MAC0	0x00
 #define MY_DEST_MAC1	0x00
@@ -34,6 +40,15 @@ int main(int argc, char *argv[])
 	char sendbuf[BUF_SIZ];
 	struct ether_header *eh = (struct ether_header *) sendbuf;
 	struct sockaddr_ll socket_address;
+
+	cpu_set_t set;
+	int cpu_id = atoi(argv[1]);
+	CPU_SET(cpu_id, &set);
+
+	if (sched_setaffinity(getpid(), sizeof(set), &set) == -1) {
+		perror("Failed to call sched_setaffinity()");
+		return -1;
+	}
 
 	/* Open RAW socket to send on */
 	if ((sockfd = socket(AF_PACKET, SOCK_RAW, IPPROTO_RAW)) == -1) {

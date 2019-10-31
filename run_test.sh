@@ -31,7 +31,12 @@ make
 sudo pkill sendRawEth
 for i in $(eval echo {1..$NUM_BOTS})
 do
-  sudo ./sendRawEthRandom &
+  if [ $i -gt 10 ];
+  then
+    sudo ./sendRawEthRandom $((3 + $i)) &
+  else
+    sudo ./sendRawEthRandom $((40 - $i)) &
+  fi
 done
 
 # Get stats every second until the experiment ends.
