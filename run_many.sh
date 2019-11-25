@@ -22,7 +22,7 @@ echo "|--------|------------|-------------------|--------------------|----------
 for i in 1 2 3
 do
   # Loop over table sizes.
-  for j in 15 20 22
+  for j in 15 20 25
   do
     # Move temporary files into place and overwrite parameters as needed.
     cp lua/gk.lua.bak lua/gk.lua
