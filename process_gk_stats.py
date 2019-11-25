@@ -35,18 +35,20 @@ with open(sys.argv[1]) as f:
            lcore = tokens[10][:-1]
            n_pkt = int(tokens[13][:-1])
            n_byt = int(tokens[16][:-1])
-           if lcore not in stats:
-               # Haven't seen this lcore for this measurement.
-               cur_num_packets.append(n_pkt)
-               cur_num_bytes.append(n_byt)
-               stats[lcore] = 1
-           else:
+           if lcore in stats:
                # We have collected stats for all lcores for this measurement.
                gk_total_num_packets.append(sum(cur_num_packets))
                gk_total_num_bytes.append(sum(cur_num_bytes))
                cur_num_packets = []
                cur_num_bytes = []
                stats = {}
+           cur_num_packets.append(n_pkt)
+           cur_num_bytes.append(n_byt)
+           stats[lcore] = 1
+
+    if len(cur_num_packets) > 0:
+        gk_total_num_packets.append(sum(cur_num_packets))
+        gk_total_num_bytes.append(sum(cur_num_bytes))
 
 #
 # Process client measurements.
