@@ -8,7 +8,7 @@ if [ "$#" -ne 3 ]; then
 fi
 
 id=$(sudo aws ec2 describe-instances \
-    --filters "Name=tag:Name,Values=$1" \
+    --filters Name=tag:Name,Values=$1 Name=instance-state-name,Values=running \
     --output text \
     --query 'Reservations[*].Instances[*].InstanceId')
 
@@ -21,5 +21,5 @@ ip_addr=$(sudo aws ec2 describe-instances \
     --query 'Reservations[*].Instances[*].PublicIpAddress' \
     --output text)
 
-scp -i ${key_name} \
+scp -i ${key_name} -o LogLevel=error \
     ubuntu@ec2-$(echo "$ip_addr" | tr . -).us-east-2.compute.amazonaws.com:"$2" "$3"
