@@ -50,6 +50,10 @@ with open(sys.argv[1]) as f:
         gk_total_num_packets.append(sum(cur_num_packets))
         gk_total_num_bytes.append(sum(cur_num_bytes))
 
+# Throw away the first measurement.
+gk_total_num_packets = gk_total_num_packets[1:]
+gk_total_num_bytes = gk_total_num_bytes[1:]
+
 #
 # Process client measurements.
 #
