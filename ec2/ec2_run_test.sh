@@ -1,15 +1,15 @@
 #!/bin/bash
 
-if [ $# -ne 4 ]; then
-  echo "usage: ./ec2_run_test.sh experiment_name traffic_rate experiment_length proto"
-  echo "e.g.: ./ec2_run_test.sh patch1 1M 300 tcp"
+if [ $# -ne 3 ]; then
+  echo "usage: ./ec2_run_test.sh traffic_rate experiment_length proto"
+  echo "e.g.: ./ec2_run_test.sh 1M 300 tcp"
   exit
 fi
 
-EXP_NAME=$1
-EXP_RATE=$2
-EXP_LEN=$3
-EXP_PROTO=$4
+EXP_RATE=$1
+EXP_LEN=$2
+EXP_PROTO=$3
+EXP_NAME=${EXP_RATE}_${EXP_LEN}_${EXP_PROTO}
 
 # Create directory for experiment results.
 mkdir -p $EXP_NAME
@@ -54,7 +54,7 @@ sleep 10
 ./ec2_send_command.sh dest "nohup bash -c 'sudo tcpdump -i ens6 -w /home/ubuntu/server_dump.pcap' &>/dev/null &"
 ./ec2_send_command.sh dest "nohup bash -c 'for i in $(eval echo {1..$((${EXP_LEN}+10))}); do ifconfig | grep ens6 --after-context=8 >> /home/ubuntu/server_ifconfig.txt && sleep 1; done' &>/dev/null &"
 
-./ec2_send_command.sh client "bash -c '(sudo tcpdump -i ens5 not port 22 and host 171.31.1.43 -w /home/ubuntu/client_dump.pcap) &>/dev/null &'"
+./ec2_send_command.sh client "nohup bash -c 'sudo tcpdump -i ens5 host 172.31.1.43 -w /home/ubuntu/client_dump.pcap' &>/dev/null &"
 
 echo "here"
 
@@ -93,7 +93,6 @@ sleep ${EXP_LEN}
 ./ec2_send_command.sh dest "rm -rf /home/ubuntu/server_output.txt"
 ./ec2_send_command.sh dest "rm -rf /home/ubuntu/server_ifconfig.txt"
 ./ec2_send_command.sh dest "rm -rf /home/ubuntu/server_dump.pcap"
-./ec2_send_command.sh client "rm -rf /home/ubuntu/client_dump.pcap"
+#./ec2_send_command.sh client "rm -rf /home/ubuntu/client_dump.pcap"
 
-stats=$(sudo python3 process_gk_stats.py ${EXP_NAME}/gatekeeper.log ${EXP_NAME}/server_ifconfig.txt)
-echo ${stats}
+python3 process_gk_stats.py ${EXP_NAME}/gatekeeper.log ${EXP_NAME}/server_ifconfig.txt
