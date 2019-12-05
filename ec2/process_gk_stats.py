@@ -81,7 +81,7 @@ with open(sys.argv[2]) as f:
             prev_byt = n_byt
 
 # Note: currently only outputting packet measurements, not bytes.
-print(gk_total_num_packets)
+print(gk_total_num_bytes)
 gk_mpps_0 = round(npkts_to_mpps(numpy.percentile(gk_total_num_packets, 0), 30), 2)
 gk_mpps_50 = round(npkts_to_mpps(numpy.percentile(gk_total_num_packets, 50), 30), 2)
 gk_mpps_99 = round(npkts_to_mpps(numpy.percentile(gk_total_num_packets, 99), 30), 2)
@@ -93,7 +93,7 @@ if gk_mpps_99 < .01:
     gk_mpps_99 = round(npkts_to_kpps(numpy.percentile(gk_total_num_packets, 99), 30), 2)
     gk_mpps_mean = round(npkts_to_kpps(float(sum(gk_total_num_packets)) / len(gk_total_num_packets), 30), 2)
 
-print(cli_total_num_packets)
+print(cli_total_num_bytes)
 cli_mpps_0 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 0), 1), 2)
 cli_mpps_50 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 50), 1), 2)
 cli_mpps_99 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 99), 1), 2)
@@ -105,11 +105,11 @@ if cli_mpps_99 < .01:
     cli_mpps_99 = round(npkts_to_kpps(numpy.percentile(cli_total_num_packets, 99), 1), 2)
     cli_mpps_mean = round(npkts_to_kpps(float(sum(cli_total_num_packets)) / len(cli_total_num_packets), 1), 2)
 
-print(str(gk_mpps_0) + "\t" +
-    str(gk_mpps_50) + "\t" +
-    str(gk_mpps_99) + "\t" +
-    str(gk_mpps_mean) + "\t" +
-    str(cli_mpps_0) + "\t" +
-    str(cli_mpps_50) + "\t" +
-    str(cli_mpps_99) + "\t" +
-    str(cli_mpps_mean))
+#print(str(gk_mpps_0) + "\t" +
+#    str(gk_mpps_50) + "\t" +
+#    str(gk_mpps_99) + "\t" +
+#    str(gk_mpps_mean) + "\t" +
+#    str(cli_mpps_0) + "\t" +
+#    str(cli_mpps_50) + "\t" +
+#    str(cli_mpps_99) + "\t" +
+#    str(cli_mpps_mean))

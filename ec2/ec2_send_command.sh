@@ -7,22 +7,20 @@ if [ "$#" -ne 2 ]; then
     exit
 fi
 
-id=$(sudo aws ec2 describe-instances \
-    --filters Name=tag:Name,Values=$1 Name=instance-state-name,Values=running \
-    --output text \
-    --query 'Reservations[*].Instances[*].InstanceId')
-
-if [ -z ${id} ]; then
-    echo "Instance $1 not found"
+fname="ip_addrs.txt"
+if [ ! -f ${fname} ]; then
+  ./ec2_get_ip_addrs.sh
 fi
 
-ip_addr=$(sudo aws ec2 describe-instances \
-    --instance-ids ${id} \
-    --query 'Reservations[*].Instances[*].PublicIpAddress' \
-    --output text)
+ip_addr=$(cat ip_addrs.txt | grep $1 | awk '{print $2}')
+
+if [ -e "${ip_addr}" ]; then
+  echo "Can't find IP address"
+  exit
+fi
 
 echo $2
 
-ssh -i ${key_name} -o LogLevel=error \
-    ubuntu@ec2-$(echo "$ip_addr" | tr . -).us-east-2.compute.amazonaws.com \
+ssh -i ${key_name} -o LogLevel=error -o StrictHostKeyChecking=no \
+    ubuntu@ec2-$(echo "${ip_addr}" | tr . -).us-east-2.compute.amazonaws.com \
     "$2"
