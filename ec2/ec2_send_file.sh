@@ -3,7 +3,7 @@
 key_name="gatekeeper.pem"
 
 if [ "$#" -ne 3 ]; then
-    echo "You must enter an instance name, a remote file, and local destination"
+    echo "You must enter an instance name, a local file, and remote destination"
     exit
 fi
 
@@ -20,4 +20,4 @@ if [ -e "${ip_addr}" ]; then
 fi
 
 scp -i ${key_name} -o LogLevel=error -o StrictHostKeyChecking=no \
-    ubuntu@ec2-$(echo "$ip_addr" | tr . -).us-east-2.compute.amazonaws.com:"$2" "$3"
+    "$2" ubuntu@ec2-$(echo "$ip_addr" | tr . -).us-east-2.compute.amazonaws.com:"$3"

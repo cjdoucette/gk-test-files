@@ -19,7 +19,8 @@ if [ -e "${ip_addr}" ]; then
   exit
 fi
 
-echo $2
+# Uncomment to show commands as they run.
+#echo $2
 
 ssh -i ${key_name} -o LogLevel=error -o StrictHostKeyChecking=no \
     ubuntu@ec2-$(echo "${ip_addr}" | tr . -).us-east-2.compute.amazonaws.com \
