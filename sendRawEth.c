@@ -15,15 +15,51 @@
 #include <net/if.h>
 #include <netinet/ether.h>
 
-#define MY_DEST_MAC0	0x00
-#define MY_DEST_MAC1	0x00
-#define MY_DEST_MAC2	0x00
-#define MY_DEST_MAC3	0x00
-#define MY_DEST_MAC4	0x00
-#define MY_DEST_MAC5	0x00
+#define MY_DEST_MAC0	0x06
+#define MY_DEST_MAC1	0x05
+#define MY_DEST_MAC2	0x5e
+#define MY_DEST_MAC3	0xfd
+#define MY_DEST_MAC4	0x41
+#define MY_DEST_MAC5	0xfc
 
-#define DEFAULT_IF	"enp131s0f0"
+#define DEFAULT_IF	"ens5"
 #define BUF_SIZ		1024
+
+uint32_t ip_checksum_add(uint32_t current, const void* data, int len)
+{
+    uint32_t checksum = current;
+    int left = len;
+    const uint16_t* data_16 = data;
+    while (left > 1) {
+        checksum += *data_16;
+        data_16++;
+        left -= 2;
+    }
+    if (left) {
+        checksum += *(uint8_t*)data_16;
+    }
+    return checksum;
+}
+
+uint16_t ip_checksum_fold(uint32_t temp_sum)
+{
+    while (temp_sum > 0xffff) {
+       temp_sum = (temp_sum >> 16) + (temp_sum & 0xFFFF);
+    }
+    return temp_sum;
+}
+
+uint16_t ip_checksum_finish(uint32_t temp_sum)
+{
+    return ~ip_checksum_fold(temp_sum);
+}
+
+uint16_t ip_checksum(const void* data, int len)
+{
+    uint32_t temp_sum;
+    temp_sum = ip_checksum_add(0, data, len);
+    return ip_checksum_finish(temp_sum);
+}
 
 int main(int argc, char *argv[])
 {
@@ -87,21 +123,17 @@ int main(int argc, char *argv[])
 	socket_address.sll_addr[3] = MY_DEST_MAC3;
 	socket_address.sll_addr[4] = MY_DEST_MAC4;
 	socket_address.sll_addr[5] = MY_DEST_MAC5;
-
 	uint8_t bytes[64] = {
-		0xe8, 0xea, 0x6a, 0x06, 0x21, 0xb2, 0xe8, 0xea,
-		0x6a, 0x06, 0x1f, 0x7c, 0x08, 0x00, 0x45, 0x00,
-		0x00, 0x32, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11,
-		0x00, 0x00, 0x0a, 0x00, 0x01, 0xfc, 0x0a, 0x00,
-		0x03, 0x22, 0x08, 0x00, 0x10, 0x00, 0x00, 0x1e,
-		0x95, 0x38, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46,
-		0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e,
-		0x4f, 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56
+		0x06, 0x9c, 0xe1, 0x4c, 0xda, 0x44, 0x06, 0xfa, 0x3d, 0x93, 0x9b, 0x68, 0x08, 0x00, 0x45, 0x00,
+		0x00, 0x32, 0x28, 0x1c, 0x40, 0x00, 0x40, 0x11, 0xb6, 0x35, 0xac, 0x1f, 0x00, 0x63, 0xac, 0x1f,
+		0x03, 0xc8, 0xc3, 0x61, 0x1f, 0x90, 0x00, 0x1e, 0x5c, 0x99, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66,
+		0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76
 	};
 
 	/* Send packet */
 	unsigned long long i = 0;
-	uint32_t *src_addr = (uint32_t *)(bytes + 26);
+	//uint32_t *src_addr = (uint32_t *)(bytes + 26);
+	//uint32_t *dst_addr = (uint32_t *)(bytes + 30);
 	while (1) {
 		/*
 		 * Round robin through IP addresses to hit all
@@ -111,8 +143,8 @@ int main(int argc, char *argv[])
 		 * Change the number of samples according to how
 		 * many lcores there are.
 		 */
-		int samples[4] = { 0xf6, 0xf7, 0xf8, 0xf9 };
-		bytes[29] = samples[i % 4];
+		//int samples[4] = { 0xf6, 0xf7, 0xf8, 0xf9 };
+		//bytes[29] = samples[i % 4];
 		if (sendto(sockfd, bytes, sizeof(bytes), 0,
 				(struct sockaddr*)&socket_address,
 				sizeof(struct sockaddr_ll)) < 0)
