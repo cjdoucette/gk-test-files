@@ -29,32 +29,32 @@ done
 if [ "$EXP_RATE" == "100mbps" ]; then
 	for i in {1..8}
 	do
-		./ec2_send_command.sh client "nohup iperf3 -c 172.31.3.200 --bind 172.31.0.94 -p 520${i} -t ${EXP_LEN} -P 128 -b 100K --congestion cubic --logfile /home/ubuntu/client_output.txt &>/dev/null &"
+		./ec2_send_command.sh client "nohup iperf3 -c 172.31.3.200 --bind 172.31.0.94 -p 520${i} -t ${EXP_LEN} -P 128 -b 100K --congestion cubic --length 256 --logfile /home/ubuntu/client_output.txt &>/dev/null &"
 	done
 elif [ "$EXP_RATE" == "500mbps" ]; then
 	for i in {1..8}
 	do
-		./ec2_send_command.sh client "nohup iperf3 -c 172.31.3.200 --bind 172.31.0.94 -p 520${i} -t ${EXP_LEN} -P 128 -b 500K --congestion cubic --logfile /home/ubuntu/client_output.txt &>/dev/null &"
+		./ec2_send_command.sh client "nohup iperf3 -c 172.31.3.200 --bind 172.31.0.94 -p 520${i} -t ${EXP_LEN} -P 128 -b 500K --congestion cubic --length 256 --logfile /home/ubuntu/client_output.txt &>/dev/null &"
 	done
 elif [ "$EXP_RATE" == "1gbps" ]; then
 	for i in {1..8}
 	do
-		./ec2_send_command.sh client "nohup iperf3 -c 172.31.3.200 --bind 172.31.0.94 -p 520${i} -t ${EXP_LEN} -P 128 -b 1M --congestion cubic --logfile /home/ubuntu/client_output.txt &>/dev/null &"
+		./ec2_send_command.sh client "nohup iperf3 -c 172.31.3.200 --bind 172.31.0.94 -p 520${i} -t ${EXP_LEN} -P 128 -b 1M --congestion cubic --length 256 --logfile /home/ubuntu/client_output.txt &>/dev/null &"
 	done
 elif [ "$EXP_RATE" == "2gbps" ]; then
 	for i in {1..8}
 	do
-		./ec2_send_command.sh client "nohup iperf3 -c 172.31.3.200 --bind 172.31.0.94 -p 520${i} -t ${EXP_LEN} -P 128 -b 2M --congestion cubic --logfile /home/ubuntu/client_output.txt &>/dev/null &"
+		./ec2_send_command.sh client "nohup iperf3 -c 172.31.3.200 --bind 172.31.0.94 -p 520${i} -t ${EXP_LEN} -P 128 -b 2M --congestion cubic --length 256 --logfile /home/ubuntu/client_output.txt &>/dev/null &"
 	done
 elif [ "$EXP_RATE" == "5gbps" ]; then
 	for i in {1..8}
 	do
-		./ec2_send_command.sh client "nohup iperf3 -c 172.31.3.200 --bind 172.31.0.94 -p 520${i} -t ${EXP_LEN} -P 128 -b 5M --congestion cubic --logfile /home/ubuntu/client_output.txt &>/dev/null &"
+		./ec2_send_command.sh client "nohup iperf3 -c 172.31.3.200 --bind 172.31.0.94 -p 520${i} -t ${EXP_LEN} -P 128 -b 5M --congestion cubic --length 512 --logfile /home/ubuntu/client_output.txt &>/dev/null &"
 	done
 elif [ "$EXP_RATE" == "10gbps" ]; then
 	for i in {1..8}
 	do
-		./ec2_send_command.sh client "nohup iperf3 -c 172.31.3.200 --bind 172.31.0.94 -p 520${i} -t ${EXP_LEN} -P 128 -b 10M --congestion cubic --logfile /home/ubuntu/client_output.txt &>/dev/null &"
+		./ec2_send_command.sh client "nohup iperf3 -c 172.31.3.200 --bind 172.31.0.94 -p 520${i} -t ${EXP_LEN} -P 128 -b 10M --congestion cubic --length 768 --logfile /home/ubuntu/client_output.txt &>/dev/null &"
 	done
 fi
 
