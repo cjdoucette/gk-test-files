@@ -58,9 +58,10 @@ echo "Cleaning up experiment..."
 ./ec2_get_file.sh gk1_server "/home/ubuntu/gatekeeper/gatekeeper.log" results/${RESULTS_NAME}
 ./ec2_send_command.sh gk1_server "sudo rm -rf /home/ubuntu/gatekeeper/gatekeeper.log"
 
-./ec2_send_command.sh gk1_server "cd gatekeeper; git reset --hard origin/gk_test"
+#./ec2_send_command.sh gk1_server "cd gatekeeper; git reset --hard origin/gk_test"
 
 echo "Done. See results/${RESULTS_NAME} for results."
 
 # Uncomment to show statistics.
-#python3 process_gk_stats.py results/${TEST_NAME}/gatekeeper.log results/${TEST_NAME}/server_ifconfig.txt
+EXP_NAME=${TEST_NAME}$(echo "${@:2}" | tr [:blank:] _)
+python3 process_gk_stats.py results/${EXP_NAME}/gatekeeper.log results/${EXP_NAME}/server_ifconfig.txt

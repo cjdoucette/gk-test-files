@@ -12,7 +12,7 @@ if [ ! -f ${fname} ]; then
   ./ec2_get_ip_addrs.sh
 fi
 
-ip_addr=$(cat ip_addrs.txt | grep $1 | awk '{print $2}')
+ip_addr=$(cat ip_addrs.txt | grep "$1 " | awk '{print $2}')
 
 if [ -e "${ip_addr}" ]; then
   echo "Can't find IP address"
