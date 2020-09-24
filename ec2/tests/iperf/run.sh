@@ -17,6 +17,7 @@ EXP_NAME=iperf$(echo "${@}" | tr [:blank:] _)
 ./ec2_send_command.sh client "sudo pkill iperf3"
 ./ec2_send_command.sh client "rm -rf /home/ubuntu/client_dump.pcap"
 ./ec2_send_command.sh client "rm -rf /home/ubuntu/client_output.txt"
+./ec2_send_command.sh client "rm -rf /home/ubuntu/client_ifconfig.txt"
 
 ./ec2_send_command.sh dest "sudo pkill tcpdump"
 ./ec2_send_command.sh dest "sudo pkill iperf3"
@@ -30,8 +31,10 @@ EXP_NAME=iperf$(echo "${@}" | tr [:blank:] _)
 ./ec2_send_command.sh gk1_server "cd gatekeeper; sudo ./gkctl/gkctl lua/examples/add6.lua" >/dev/null
 
 ./ec2_send_command.sh dest "iperf3 -s -D -d --logfile /home/ubuntu/server_output.txt"
-./ec2_send_command.sh dest "nohup bash -c 'sudo tcpdump -i ens6 -w /home/ubuntu/server_dump.pcap' &>/dev/null &"
+./ec2_send_command.sh dest "nohup bash -c 'sudo tcpdump -i ens5 -w /home/ubuntu/server_dump.pcap' &>/dev/null &"
 ./ec2_send_command.sh dest "nohup bash -c 'for i in $(eval echo {1..$((${EXP_LEN}+10))}); do ifconfig | grep ens6 --after-context=8 >> /home/ubuntu/server_ifconfig.txt && sleep 1; done' &>/dev/null &"
+
+./ec2_send_command.sh client "nohup bash -c 'for i in $(eval echo {1..$((${EXP_LEN}+10))}); do ifconfig | grep ens5 --after-context=8 >> /home/ubuntu/client_ifconfig.txt && sleep 1; done' &>/dev/null &"
 
 if [ "$EXP_IP" == "IPv4" ] || [ "$EXP_IP" == "ipv4" ]; then
   ./ec2_send_command.sh client "nohup bash -c 'sudo tcpdump -i ens5 ip and not port 22 -w /home/ubuntu/client_dump.pcap' &>/dev/null &"
@@ -63,6 +66,8 @@ sleep ${EXP_LEN}
 ./ec2_get_file.sh client "/home/ubuntu/client_output.txt" results/${EXP_NAME}
 ./ec2_send_command.sh client "rm -rf /home/ubuntu/client_dump.pcap"
 ./ec2_send_command.sh client "rm -rf /home/ubuntu/client_output.txt"
+./ec2_get_file.sh client "/home/ubuntu/client_ifconfig.txt" results/${EXP_NAME}
+./ec2_send_command.sh client "rm -rf /home/ubuntu/client_ifconfig.txt"
 
 ./ec2_send_command.sh dest "sudo pkill tcpdump"
 ./ec2_send_command.sh dest "sudo pkill iperf3"
