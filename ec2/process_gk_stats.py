@@ -14,13 +14,14 @@ def nbytes_to_gibps(nbytes, sec):
 def nbytes_to_mibps(nbytes, sec):
     return nbytes / float(sec) * 8. / 1024. / 1024.
 
-if len(sys.argv) != 3 and len(sys.argv) != 2:
+if len(sys.argv) != 4 and len(sys.argv) != 2:
     print("Need filenames for the Gatekeeper log and/or the server output log")
     sys.exit()
 
-if len(sys.argv) == 3:
+if len(sys.argv) == 4:
     gk_log = sys.argv[1]
-    server_log = sys.argv[2];
+    client_log = sys.argv[2];
+    server_log = sys.argv[3];
 elif len(sys.argv) == 2:
     server = ['server_ifconfig', '.txt', 'server', 'dest']
     server_log = None
@@ -90,6 +91,53 @@ if gk_log is not None:
 # Process server/client measurements.
 #
 
+cli_total_num_packets = []
+cli_total_num_bytes = []
+
+if client_log is not None:
+    with open(client_log) as f:
+        first = True
+        prev_pkt = None
+        prev_byt = None
+        for line in f:
+            if line.startswith("        TX packets"):
+                tokens = line.split();
+                n_pkt = int(tokens[2])
+                n_byt = int(tokens[4])
+                if first:
+                    prev_pkt = n_pkt
+                    prev_byt = n_byt
+                    first = False
+                    continue
+                cli_total_num_packets.append(n_pkt - prev_pkt)
+                cli_total_num_bytes.append(n_byt - prev_byt)
+                prev_pkt = n_pkt
+                prev_byt = n_byt
+
+    print("Client measurements:")
+    cli_total_num_packets = cli_total_num_packets[3:-3]
+    cli_total_num_bytes = cli_total_num_bytes[3:-3]
+    print(cli_total_num_bytes)
+    cli_mpps_0 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 0), 1), 2)
+    cli_mpps_50 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 50), 1), 2)
+    cli_mpps_99 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 99), 1), 2)
+    cli_mpps_mean = round(npkts_to_mpps(float(sum(cli_total_num_packets)) / len(cli_total_num_packets), 1), 2)
+
+    if cli_mpps_99 < .01:
+        cli_mpps_0 = round(npkts_to_kpps(numpy.percentile(cli_total_num_packets, 0), 1), 2)
+        cli_mpps_50 = round(npkts_to_kpps(numpy.percentile(cli_total_num_packets, 50), 1), 2)
+        cli_mpps_99 = round(npkts_to_kpps(numpy.percentile(cli_total_num_packets, 99), 1), 2)
+        cli_mpps_mean = round(npkts_to_kpps(float(sum(cli_total_num_packets)) / len(cli_total_num_packets), 1), 2)
+
+    cli_mbps_0 = round(nbytes_to_mibps(numpy.percentile(cli_total_num_bytes, 0), 1), 2)
+    cli_mbps_50 = round(nbytes_to_mibps(numpy.percentile(cli_total_num_bytes, 50), 1), 2)
+    cli_mbps_99 = round(nbytes_to_mibps(numpy.percentile(cli_total_num_bytes, 99), 1), 2)
+    cli_mbps_mean = round(nbytes_to_mibps(float(sum(cli_total_num_bytes)) / len(cli_total_num_bytes), 1), 2)
+
+    print(str(cli_mbps_0) + "\t" + str(cli_mbps_50) + "\t" +
+            str(cli_mbps_99) + "\t" + str(cli_mbps_mean))
+#
+
 # Totals of packets and bytes for each measurement, i.e. index 0
 # holds the total packets and bytes sent at the first measurement, etc.
 cli_total_num_packets = []
@@ -115,25 +163,25 @@ if server_log is not None:
                 prev_pkt = n_pkt
                 prev_byt = n_byt
 
-    print("Client/server measurements:")
-    cli_total_num_packets = cli_total_num_packets[3:-3]
-    cli_total_num_bytes = cli_total_num_bytes[3:-3]
+    print("Server measurements:")
     print(cli_total_num_bytes)
-    cli_mpps_0 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 0), 1), 2)
-    cli_mpps_50 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 50), 1), 2)
-    cli_mpps_99 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 99), 1), 2)
-    cli_mpps_mean = round(npkts_to_mpps(float(sum(cli_total_num_packets)) / len(cli_total_num_packets), 1), 2)
+    #cli_total_num_packets = cli_total_num_packets[3:-3]
+    #cli_total_num_bytes = cli_total_num_bytes[3:-3]
+    cli_mpps_0 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 0), 5), 2)
+    cli_mpps_50 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 50), 5), 2)
+    cli_mpps_99 = round(npkts_to_mpps(numpy.percentile(cli_total_num_packets, 99), 5), 2)
+    cli_mpps_mean = round(npkts_to_mpps(float(sum(cli_total_num_packets)) / len(cli_total_num_packets), 5), 2)
 
     if cli_mpps_99 < .01:
-        cli_mpps_0 = round(npkts_to_kpps(numpy.percentile(cli_total_num_packets, 0), 1), 2)
-        cli_mpps_50 = round(npkts_to_kpps(numpy.percentile(cli_total_num_packets, 50), 1), 2)
-        cli_mpps_99 = round(npkts_to_kpps(numpy.percentile(cli_total_num_packets, 99), 1), 2)
-        cli_mpps_mean = round(npkts_to_kpps(float(sum(cli_total_num_packets)) / len(cli_total_num_packets), 1), 2)
+        cli_mpps_0 = round(npkts_to_kpps(numpy.percentile(cli_total_num_packets, 0), 5), 2)
+        cli_mpps_50 = round(npkts_to_kpps(numpy.percentile(cli_total_num_packets, 50), 5), 2)
+        cli_mpps_99 = round(npkts_to_kpps(numpy.percentile(cli_total_num_packets, 99), 5), 2)
+        cli_mpps_mean = round(npkts_to_kpps(float(sum(cli_total_num_packets)) / len(cli_total_num_packets), 5), 2)
 
-    cli_mbps_0 = round(nbytes_to_mibps(numpy.percentile(cli_total_num_bytes, 0), 1), 2)
-    cli_mbps_50 = round(nbytes_to_mibps(numpy.percentile(cli_total_num_bytes, 50), 1), 2)
-    cli_mbps_99 = round(nbytes_to_mibps(numpy.percentile(cli_total_num_bytes, 99), 1), 2)
-    cli_mbps_mean = round(nbytes_to_mibps(float(sum(cli_total_num_bytes)) / len(cli_total_num_bytes), 1), 2)
+    cli_mbps_0 = round(nbytes_to_mibps(numpy.percentile(cli_total_num_bytes, 0), 5), 2)
+    cli_mbps_50 = round(nbytes_to_mibps(numpy.percentile(cli_total_num_bytes, 50), 5), 2)
+    cli_mbps_99 = round(nbytes_to_mibps(numpy.percentile(cli_total_num_bytes, 99), 5), 2)
+    cli_mbps_mean = round(nbytes_to_mibps(float(sum(cli_total_num_bytes)) / len(cli_total_num_bytes), 5), 2)
 
     print(str(cli_mbps_0) + "\t" + str(cli_mbps_50) + "\t" +
             str(cli_mbps_99) + "\t" + str(cli_mbps_mean))

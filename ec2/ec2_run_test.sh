@@ -64,4 +64,4 @@ echo "Done. See results/${RESULTS_NAME} for results."
 
 # Uncomment to show statistics.
 EXP_NAME=${TEST_NAME}$(echo "${@:2}" | tr [:blank:] _)
-python3 process_gk_stats.py results/${EXP_NAME}/gatekeeper.log results/${EXP_NAME}/server_ifconfig.txt
+python3 process_gk_stats.py results/${EXP_NAME}/gatekeeper.log results/${EXP_NAME}/client_ifconfig.txt results/${EXP_NAME}/server_ifconfig.txt
