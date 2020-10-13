@@ -1,6 +1,7 @@
 import sys
 import statistics
 import numpy
+from datetime import datetime
 
 def npkts_to_mpps(npkts, sec):
     return npkts / float(sec) / 1000. / 1000.
@@ -14,25 +15,14 @@ def nbytes_to_gibps(nbytes, sec):
 def nbytes_to_mibps(nbytes, sec):
     return nbytes / float(sec) * 8. / 1024. / 1024.
 
-if len(sys.argv) != 4 and len(sys.argv) != 2:
-    print("Need filenames for the Gatekeeper log and/or the server output log")
+if len(sys.argv) != 5:
+    print("Need filenames")
     sys.exit()
 
-if len(sys.argv) == 4:
-    gk_log = sys.argv[1]
-    client_log = sys.argv[2];
-    server_log = sys.argv[3];
-elif len(sys.argv) == 2:
-    server = ['server_ifconfig', '.txt', 'server', 'dest']
-    server_log = None
-    for s in server:
-        if s in sys.argv[1]:
-            print("Guessing " + sys.argv[1] + " is for the server output log")
-            server_log = sys.argv[1]
-            gk_log = None
-    if server_log is None:
-        print("Guessing " + sys.argv[1] + " is for the Gatekeeper log")
-        gk_log = sys.argv[1]
+gk_log = sys.argv[1]
+client_log = sys.argv[2]
+server_log = sys.argv[3]
+legit_log = sys.argv[4]
 
 #
 # Process GK block measurements.
@@ -136,7 +126,6 @@ if client_log is not None:
 
     print(str(cli_mbps_0) + "\t" + str(cli_mbps_50) + "\t" +
             str(cli_mbps_99) + "\t" + str(cli_mbps_mean))
-#
 
 # Totals of packets and bytes for each measurement, i.e. index 0
 # holds the total packets and bytes sent at the first measurement, etc.
@@ -185,6 +174,62 @@ if server_log is not None:
 
     print(str(cli_mbps_0) + "\t" + str(cli_mbps_50) + "\t" +
             str(cli_mbps_99) + "\t" + str(cli_mbps_mean))
-#    str(gk_mpps_50) + "\t" +
-#    str(gk_mpps_99) + "\t" +
-#    str(gk_mpps_mean) + "\t" +
+
+completed = []
+duration = []
+connections = {}
+if legit_log is not None:
+    with open(legit_log) as f:
+        for line in f:
+            tokens = line.split()
+
+            if len(tokens) == 0:
+                continue
+
+            if tokens[1] != 'IP':
+                continue
+
+            if tokens[-1] == '(ipip-proto-4)':
+                offset = 4
+            else:
+                offset = 0
+
+            if tokens[6 + offset] == '[S],':
+                port = tokens[2 + offset].split(sep=".")[4]
+                if port not in connections:
+                    time_start = datetime.strptime(tokens[0], '%H:%M:%S.%f')
+                    connections[port] = (time_start, False, None)
+
+            if (tokens[7 + offset] == 'ack' and tokens[8 + offset] == '2,') or \
+                    tokens[6 + offset] == '[F.],':
+                port = tokens[2 + offset].split(sep=".")[4]
+                if port not in connections:
+                    print("Connection not found")
+                    quit()
+                time_stop = datetime.strptime(tokens[0], '%H:%M:%S.%f')
+                connection = connections[port]
+                time_start = connection[0]
+                d = time_stop - time_start
+                duration_ms = d.seconds * 1000 + d.microseconds / 1000
+                connections[port] = (time_start, True, duration_ms)
+
+    num_completed = 0
+    durations = []
+    for port in connections:
+        connection = connections[port]
+        completed = connection[1]
+        duration_ms = connection[2]
+        if completed:
+            num_completed += 1
+            durations.append(duration_ms)
+        else:
+            durations.append(10000)
+
+    print("Completed " + str(num_completed) + " out of " + str(len(connections)) + " flows")
+    duration_0 = round(numpy.percentile(durations, 0), 2)
+    duration_50 = round(numpy.percentile(durations, 50), 2)
+    duration_99 = round(numpy.percentile(durations, 99), 2)
+    duration_mean = round(float(sum(durations)) / len(durations), 2)
+
+    print(str(duration_0) + "\t" + str(duration_50) + "\t" +
+            str(duration_99) + "\t" + str(duration_mean))
