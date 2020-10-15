@@ -25,7 +25,7 @@ EXP_NAME=nogk$(echo "${@}" | tr [:blank:] _)
 ./ec2_send_command.sh tcp "sudo pkill curl"		# http
 ./ec2_send_command.sh tcp "sudo pkill send.sh"
 ./ec2_send_command.sh tcp "sudo pkill tcpdump"
-./ec2_send_command.sh tcp "rm -rf /home/ubuntu/raw-packets/legit/legit_log.txt"
+./ec2_send_command.sh tcp "sudo rm -rf /home/ubuntu/raw-packets/legit/legit_log.txt"
 
 # Start netcat server.
 #./ec2_send_command.sh dest "nohup bash -c 'nc -k -l 1234' &>/dev/null &"
@@ -97,7 +97,7 @@ fi
 
 # Start capturing attacker TX rate and server RX rate.
 ./ec2_send_command.sh client "nohup bash -c 'while true; do ifconfig | grep ens5 --after-context=8 >> /home/ubuntu/client_ifconfig.txt && sleep 1; done' &>/dev/null &"
-./ec2_send_command.sh dest "nohup bash -c 'while true; do ifconfig | grep ens5 --after-context=8 >> /home/ubuntu/server_ifconfig.txt && date >> /home/ubuntu/server_ifconfig.txt && sleep 5; done' &>/dev/null &"
+./ec2_send_command.sh dest "nohup bash -c 'while true; do ifconfig | grep ens3 --after-context=8 >> /home/ubuntu/server_ifconfig.txt && date >> /home/ubuntu/server_ifconfig.txt && sleep 5; done' &>/dev/null &"
 
 # Let attackers get up to speed.
 sleep 20
@@ -128,11 +128,12 @@ sleep 60
 ./ec2_send_command.sh tcp "sudo pkill curl"		# http
 ./ec2_send_command.sh tcp "sudo pkill send.sh"
 ./ec2_send_command.sh tcp "sudo pkill tcpdump"
+./ec2_send_command.sh tcp "sudo chmod ogu+r /home/ubuntu/raw-packets/legit/legit_log.txt"
 ./ec2_get_file.sh tcp "/home/ubuntu/raw-packets/legit/legit_log.txt" results/${EXP_NAME}
-./ec2_send_command.sh tcp "rm -rf /home/ubuntu/raw-packets/legit/legit_log.txt"
+./ec2_send_command.sh tcp "sudo rm -rf /home/ubuntu/raw-packets/legit/legit_log.txt"
 ./ec2_get_file.sh tcp "/home/ubuntu/legit_dump.pcap" results/${EXP_NAME}
 ./ec2_send_command.sh tcp "rm -rf /home/ubuntu/legit_dump.pcap"
 
 # Once the instance has had enough time, collect the server log.
 ./ec2_get_file.sh dest "/home/ubuntu/server_ifconfig.txt" results/${EXP_NAME}
-./ec2_send_command.sh dest "rm -rf /home/ubuntu/server_ifconfig.txt"
+#./ec2_send_command.sh dest "rm -rf /home/ubuntu/server_ifconfig.txt"
