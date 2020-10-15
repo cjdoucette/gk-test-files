@@ -191,8 +191,12 @@ if legit_log is not None:
 
             if tokens[-1] == '(ipip-proto-4)':
                 offset = 4
+                if tokens[2] != '172.31.0.150' or tokens[4] != '172.31.1.43:':
+                    continue
             else:
                 offset = 0
+                if not tokens[2].startswith('172.31.0.150') or not tokens[4].startswith('172.31.3.200'):
+                    continue
 
             if tokens[6 + offset] == '[S],':
                 port = tokens[2 + offset].split(sep=".")[4]
