@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 import statistics
 import numpy
@@ -15,14 +16,14 @@ def nbytes_to_gibps(nbytes, sec):
 def nbytes_to_mibps(nbytes, sec):
     return nbytes / float(sec) * 8. / 1024. / 1024.
 
-if len(sys.argv) != 5:
-    print("Need filenames")
+if len(sys.argv) != 2:
+    print("Need test_name/experiment_name")
     sys.exit()
 
-gk_log = sys.argv[1]
-client_log = sys.argv[2]
-server_log = sys.argv[3]
-legit_log = sys.argv[4]
+gk_log = 'results/' + sys.argv[1] + '/gatekeeper.log'
+client_log = 'results/' + sys.argv[1] + '/client_ifconfig.txt'
+server_log = 'results/' + sys.argv[1] + '/server_ifconfig.txt'
+legit_log = 'results/' + sys.argv[1] + '/legit_log.txt'
 
 #
 # Process GK block measurements.
@@ -65,17 +66,16 @@ if gk_log is not None:
 
     # Note: currently only outputting packet measurements, not bytes.
     print("Gatekeeper measurements:")
+    gk_total_num_packets = gk_total_num_packets[1:-1]
+    gk_total_num_bytes = gk_total_num_bytes[1:-1]
     print(gk_total_num_bytes)
-    gk_mpps_0 = round(npkts_to_mpps(numpy.percentile(gk_total_num_packets, 0), 30), 2)
-    gk_mpps_50 = round(npkts_to_mpps(numpy.percentile(gk_total_num_packets, 50), 30), 2)
-    gk_mpps_99 = round(npkts_to_mpps(numpy.percentile(gk_total_num_packets, 99), 30), 2)
-    gk_mpps_mean = round(npkts_to_mpps(float(sum(gk_total_num_packets)) / len(gk_total_num_packets), 30), 2)
+    gk_mibps_0 = round(nbytes_to_mibps(numpy.percentile(gk_total_num_bytes, 0), 15), 2)
+    gk_mibps_50 = round(nbytes_to_mibps(numpy.percentile(gk_total_num_bytes, 50), 15), 2)
+    gk_mibps_99 = round(nbytes_to_mibps(numpy.percentile(gk_total_num_bytes, 99), 15), 2)
+    gk_mibps_mean = round(nbytes_to_mibps(float(sum(gk_total_num_bytes)) / len(gk_total_num_bytes), 15), 2)
 
-    if gk_mpps_99 < .01:
-        gk_mpps_0 = round(npkts_to_kpps(numpy.percentile(gk_total_num_packets, 0), 30), 2)
-        gk_mpps_50 = round(npkts_to_kpps(numpy.percentile(gk_total_num_packets, 50), 30), 2)
-        gk_mpps_99 = round(npkts_to_kpps(numpy.percentile(gk_total_num_packets, 99), 30), 2)
-        gk_mpps_mean = round(npkts_to_kpps(float(sum(gk_total_num_packets)) / len(gk_total_num_packets), 30), 2)
+    print(str(gk_mibps_0) + "\t" + str(gk_mibps_50) + "\t" +
+            str(gk_mibps_99) + "\t" + str(gk_mibps_mean))
 
 #
 # Process server/client measurements.
@@ -132,7 +132,7 @@ if client_log is not None:
 cli_total_num_packets = []
 cli_total_num_bytes = []
 
-if server_log is not None:
+if Path(server_log).is_file():
     with open(server_log) as f:
         first = True
         prev_pkt = None
@@ -227,7 +227,7 @@ if legit_log is not None:
             num_completed += 1
             durations.append(duration_ms)
         else:
-            durations.append(10000)
+            durations.append(20000)
 
     print("Completed " + str(num_completed) + " out of " + str(len(connections)) + " flows")
     duration_0 = round(numpy.percentile(durations, 0), 2)

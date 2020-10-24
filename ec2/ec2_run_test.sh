@@ -7,16 +7,16 @@ if [ $# -lt 1 ]; then
 fi
 
 TEST_NAME=$1
-RESULTS_NAME=$1$(echo "${@:2}" | tr [:blank:] _)
+RESULTS_NAME=$(echo "${@:2}" | tr [:blank:] _)
 
 # Create directory for experiment results.
-mkdir -p results/${RESULTS_NAME}
+mkdir -p results/${TEST_NAME}/${RESULTS_NAME}
 
 #
 # Cleanup any state from previous experiments.
 #
 
-echo "Cleaning up testbed from any previous tests ..."
+echo "Cleaning up testbed from any previous tests..."
 
 ./ec2_send_command.sh gt_server "sudo rm -rf /home/ubuntu/gatekeeper/grantor.log"
 ./ec2_send_command.sh gt_server "sudo pkill gatekeeper"
@@ -29,39 +29,19 @@ echo "Cleaning up testbed from any previous tests ..."
 #
 
 # Initialize test environment.
-echo "Initializing test" ${RESULTS_NAME} "..."
-./tests/${TEST_NAME}/init.sh
-
-# Run Gatekeeper and Grantor.
-./ec2_send_command.sh gk1_server "bash -c 'cd gatekeeper; (sudo nohup ./build/gatekeeper -- -l gatekeeper.log &>/dev/null) &'"
-./ec2_send_command.sh gt_server "bash -c 'cd gatekeeper; (sudo nohup ./build/gatekeeper -- -l grantor.log &>/dev/null) &'"
-
-sleep 10
+echo "Initializing test ${TEST_NAME}/${RESULTS_NAME}..."
+./tests/${TEST_NAME}/init.sh "${@:1}"
 
 # Start test script.
-echo "Starting test" ${RESULTS_NAME} "..."
-./tests/${TEST_NAME}/run.sh "${@:2}"
+echo "Starting test ${TEST_NAME}/${RESULTS_NAME}..."
+./tests/${TEST_NAME}/run.sh "${@:1}"
 
 #
 # Clean up experiment and fetch logs.
 #
 
-echo "Cleaning up experiment..."
-
-./ec2_send_command.sh gt_server "sudo pkill gatekeeper"
-./ec2_send_command.sh gt_server "sudo chmod ogu+r /home/ubuntu/gatekeeper/grantor.log"
-./ec2_get_file.sh gt_server "/home/ubuntu/gatekeeper/grantor.log" results/${RESULTS_NAME}
-./ec2_send_command.sh gt_server "sudo rm -rf /home/ubuntu/gatekeeper/grantor.log"
-
-./ec2_send_command.sh gk1_server "sudo pkill gatekeeper"
-./ec2_send_command.sh gk1_server "sudo chmod ogu+r /home/ubuntu/gatekeeper/gatekeeper.log"
-./ec2_get_file.sh gk1_server "/home/ubuntu/gatekeeper/gatekeeper.log" results/${RESULTS_NAME}
-./ec2_send_command.sh gk1_server "sudo rm -rf /home/ubuntu/gatekeeper/gatekeeper.log"
-
 #./ec2_send_command.sh gk1_server "cd gatekeeper; git reset --hard origin/gk_test"
 
-echo "Done. See results/${RESULTS_NAME} for results."
+echo "Done. See results/${TEST_NAME}/${RESULTS_NAME} for results."
 
-# Uncomment to show statistics.
-EXP_NAME=${TEST_NAME}$(echo "${@:2}" | tr [:blank:] _)
-python3 process_gk_stats.py results/${EXP_NAME}/gatekeeper.log results/${EXP_NAME}/client_ifconfig.txt results/${EXP_NAME}/server_ifconfig.txt results/${EXP_NAME}/legit_log.txt > results/${EXP_NAME}/output.txt
+python3 process_gk_stats.py ${TEST_NAME}/${RESULTS_NAME} > results/${TEST_NAME}/${RESULTS_NAME}/output.txt

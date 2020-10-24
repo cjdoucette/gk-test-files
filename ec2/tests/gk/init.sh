@@ -1,13 +1,15 @@
 #!/bin/bash
 
-if [ $# -ne 0 ]; then
-  echo "usage: ./init.sh"
-  echo "e.g.: ./init.sh"
+if [ $# -ne 3 ]; then
+  echo "usage: ./init.sh exp_name traffic_rate policy"
+  echo "e.g.: ./init.sh gk {100mibps,500mibps,1-9gibps} 50"
   exit
 fi
 
+EXP_POLICY=$3
+
 # Add policy file to Grantor.
-./ec2_send_file.sh gt_server "tests/gk/config/policy.lua" "gatekeeper/lua/examples/policy.lua"
+./ec2_send_file.sh gt_server "tests/gk/config/policy/${EXP_POLICY}.lua" "gatekeeper/lua/examples/policy.lua"
 
 # Don't use interface (for back-to-front tests).
 ./ec2_send_command.sh client "sudo ip link set down ens6"
