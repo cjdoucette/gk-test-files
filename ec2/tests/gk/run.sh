@@ -18,6 +18,10 @@ RESULTS_NAME=$(echo "${@:2}" | tr [:blank:] _)
 ./ec2_send_command.sh client "sudo pkill sendRawGk"
 ./ec2_send_command.sh client "rm -rf /home/ubuntu/client_ifconfig.txt"
 
+./ec2_send_command.sh client2 "sudo pkill bash"		# ifconfig
+./ec2_send_command.sh client2 "sudo pkill sendRawGk"
+./ec2_send_command.sh client2 "rm -rf /home/ubuntu/client2_ifconfig.txt"
+
 ./ec2_send_command.sh tcp "sudo pkill nc"		# nc/tcp
 ./ec2_send_command.sh tcp "sudo pkill curl"		# http
 ./ec2_send_command.sh tcp "sudo pkill send.sh"
@@ -38,19 +42,26 @@ sleep 10
 
 # Calibrate client.
 #./ec2_send_command.sh client "nohup bash -c 'cd raw-packets; sudo make; sudo ./calibrateGk 0 ${EXP_RATE}'"
+#./ec2_send_command.sh client2 "nohup bash -c 'cd raw-packets; sudo make; sudo ./calibrateGk 0 ${EXP_RATE}'"
 
 # Start capturing attacker TX rate and server RX rate.
 ./ec2_send_command.sh client "nohup bash -c 'while true; do date >> /home/ubuntu/client_ifconfig.txt && ifconfig | grep ens5 --after-context=8 >> /home/ubuntu/client_ifconfig.txt && sleep 1; done' &>/dev/null &"
+./ec2_send_command.sh client2 "nohup bash -c 'while true; do date >> /home/ubuntu/client2_ifconfig.txt && ifconfig | grep ens5 --after-context=8 >> /home/ubuntu/client2_ifconfig.txt && sleep 1; done' &>/dev/null &"
 ./ec2_send_command.sh dest "nohup bash -c 'while true;   do date >> /home/ubuntu/server_ifconfig.txt && ifconfig | grep ens3 --after-context=8 >> /home/ubuntu/server_ifconfig.txt && sleep 5; done' &>/dev/null &"
+./ec2_send_command.sh router "nohup bash -c 'while true;   do date >> /home/ubuntu/router_ifconfig.txt && ifconfig | grep ens7 --after-context=8 >> /home/ubuntu/router_ifconfig.txt && sleep 5; done' &>/dev/null &"
 
 # Start attack traffic.
 ./ec2_send_command.sh client "nohup bash -c 'cd raw-packets; sudo make; sudo ./sendRawGk 0 ${EXP_RATE}' &>/dev/null &"
+sleep 1
+./ec2_send_command.sh client2 "nohup bash -c 'cd raw-packets; sudo make; sudo ./sendRawGk 0 ${EXP_RATE}' &>/dev/null &"
 
 # Let attackers get up to speed.
 sleep 20
 
 # Start legitimate client.
 ./ec2_send_command.sh tcp "nohup bash -c 'sudo tcpdump -i ens5 not port 22 -w /home/ubuntu/legit_dump.pcap' &>/dev/null &"
+#./ec2_send_command.sh client "nohup bash -c 'sudo tcpdump -i ens5 not port 22 -w /home/ubuntu/client_dump.pcap' &>/dev/null &"
+#./ec2_send_command.sh client2 "nohup bash -c 'sudo tcpdump -i ens5 not port 22 -w /home/ubuntu/client2_dump.pcap' &>/dev/null &"
 ./ec2_send_command.sh tcp "cd raw-packets/legit && ./send.sh"
 
 echo "Cleaning up ..."
@@ -62,14 +73,27 @@ echo "Cleaning up ..."
 ./ec2_get_file.sh client "/home/ubuntu/client_ifconfig.txt" results/${EXP_NAME}/${RESULTS_NAME}
 ./ec2_send_command.sh client "rm -rf /home/ubuntu/client_ifconfig.txt"
 
+./ec2_send_command.sh client2 "sudo pkill bash"		# ifconfig
+./ec2_send_command.sh client2 "sudo pkill sendRawGk"
+./ec2_get_file.sh client2 "/home/ubuntu/client2_ifconfig.txt" results/${EXP_NAME}/${RESULTS_NAME}
+./ec2_send_command.sh client2 "rm -rf /home/ubuntu/client2_ifconfig.txt"
+
+./ec2_send_command.sh router "sudo pkill bash"		# ifconfig
+./ec2_get_file.sh router "/home/ubuntu/router_ifconfig.txt" results/${EXP_NAME}/${RESULTS_NAME}
+./ec2_send_command.sh router "rm -rf /home/ubuntu/router_ifconfig.txt"
+
 ./ec2_send_command.sh tcp "sudo pkill nc"		# nc/tcp
 ./ec2_send_command.sh tcp "sudo pkill curl"		# http
 ./ec2_send_command.sh tcp "sudo pkill send.sh"
 ./ec2_send_command.sh tcp "sudo pkill tcpdump"
+#./ec2_send_command.sh client "sudo pkill tcpdump"
+#./ec2_send_command.sh client2 "sudo pkill tcpdump"
 ./ec2_send_command.sh tcp "sudo chmod ogu+r /home/ubuntu/raw-packets/legit/legit_log.txt"
 ./ec2_get_file.sh tcp "/home/ubuntu/raw-packets/legit/legit_log.txt" results/${EXP_NAME}/${RESULTS_NAME}
 ./ec2_send_command.sh tcp "sudo rm -rf /home/ubuntu/raw-packets/legit/legit_log.txt"
 ./ec2_get_file.sh tcp "/home/ubuntu/legit_dump.pcap" results/${EXP_NAME}/${RESULTS_NAME}
+#./ec2_get_file.sh client "/home/ubuntu/client_dump.pcap" results/${EXP_NAME}/${RESULTS_NAME}
+#./ec2_get_file.sh client2 "/home/ubuntu/client2_dump.pcap" results/${EXP_NAME}/${RESULTS_NAME}
 ./ec2_send_command.sh tcp "rm -rf /home/ubuntu/legit_dump.pcap"
 
 ./ec2_send_command.sh gt_server "sudo pkill gatekeeper"
@@ -86,3 +110,4 @@ echo "Instance restarting ..."
 sleep 60
 # Once the instance has had enough time, collect the server log.
 ./ec2_get_file.sh dest "/home/ubuntu/server_ifconfig.txt" results/${EXP_NAME}/${RESULTS_NAME}
+./ec2_get_file.sh dest "/home/ubuntu/pkt_dump.pcap" results/${EXP_NAME}/${RESULTS_NAME}

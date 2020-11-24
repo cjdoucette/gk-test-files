@@ -12,7 +12,7 @@ EXP_POLICY=$3
 ./ec2_send_file.sh gt_server "tests/gk/config/policy/${EXP_POLICY}.lua" "gatekeeper/lua/examples/policy.lua"
 
 # Don't use interface (for back-to-front tests).
-./ec2_send_command.sh client "sudo ip link set down ens6"
+./ec2_send_command.sh client2 "sudo ip link set down ens6"
 
 # Encapsulate packets from the legitimate client.
 ./ec2_send_command.sh tcp "sudo ip link set dev ens5 mtu 1520"

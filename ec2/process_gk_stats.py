@@ -22,8 +22,10 @@ if len(sys.argv) != 2:
 
 gk_log = 'results/' + sys.argv[1] + '/gatekeeper.log'
 client_log = 'results/' + sys.argv[1] + '/client_ifconfig.txt'
+client2_log = 'results/' + sys.argv[1] + '/client2_ifconfig.txt'
 server_log = 'results/' + sys.argv[1] + '/server_ifconfig.txt'
 legit_log = 'results/' + sys.argv[1] + '/legit_log.txt'
+router_log = 'results/' + sys.argv[1] + '/router_ifconfig.txt'
 
 #
 # Process GK block measurements.
@@ -34,6 +36,8 @@ legit_log = 'results/' + sys.argv[1] + '/legit_log.txt'
 # the first measurement, etc.
 gk_total_num_packets = []
 gk_total_num_bytes = []
+gk_total_num_g_packets = []
+gk_total_num_g_bytes = []
 
 if gk_log is not None:
     with open(gk_log) as f:
@@ -43,6 +47,8 @@ if gk_log is not None:
         # lines, per-lcore.
         cur_num_packets = []
         cur_num_bytes = []
+        cur_num_g_packets = []
+        cur_num_g_bytes = []
         stats = {}
         for line in f:
            if line.startswith("GATEKEEPER GK: The GK block basic measurements at lcore ="):
@@ -50,19 +56,30 @@ if gk_log is not None:
                lcore = tokens[10][:-1]
                n_pkt = int(tokens[13][:-1])
                n_byt = int(tokens[16][:-1])
+               n_g_pkt = int(tokens[19][:-1])
+               n_g_byt = int(tokens[22][:-1])
                if lcore in stats:
                    gk_total_num_packets.append(sum(cur_num_packets))
                    gk_total_num_bytes.append(sum(cur_num_bytes))
+                   gk_total_num_g_packets.append(sum(cur_num_g_packets))
+                   gk_total_num_g_bytes.append(sum(cur_num_g_bytes))
                    stats = {}
                    cur_num_packets = []
                    cur_num_bytes = []
+                   cur_num_g_packets = []
+                   cur_num_g_bytes = []
                cur_num_packets.append(n_pkt)
                cur_num_bytes.append(n_byt)
+               cur_num_g_packets.append(n_g_pkt)
+               cur_num_g_bytes.append(n_g_byt)
                stats[lcore] = 1
 
         if len(cur_num_packets) > 0:
             gk_total_num_packets.append(sum(cur_num_packets))
             gk_total_num_bytes.append(sum(cur_num_bytes))
+        if len(cur_num_g_packets) > 0:
+            gk_total_num_g_packets.append(sum(cur_num_g_packets))
+            gk_total_num_g_bytes.append(sum(cur_num_g_bytes))
 
     # Note: currently only outputting packet measurements, not bytes.
     print("Gatekeeper measurements:")
@@ -76,6 +93,18 @@ if gk_log is not None:
 
     print(str(gk_mibps_0) + "\t" + str(gk_mibps_50) + "\t" +
             str(gk_mibps_99) + "\t" + str(gk_mibps_mean))
+
+    gk_total_num_g_packets = gk_total_num_g_packets[1:-1]
+    gk_total_num_g_bytes = gk_total_num_g_bytes[1:-1]
+    gk_mibps_0 = round(nbytes_to_mibps(numpy.percentile(gk_total_num_g_bytes, 0), 15), 2)
+    gk_mibps_50 = round(nbytes_to_mibps(numpy.percentile(gk_total_num_g_bytes, 50), 15), 2)
+    gk_mibps_99 = round(nbytes_to_mibps(numpy.percentile(gk_total_num_g_bytes, 99), 15), 2)
+    gk_mibps_mean = round(nbytes_to_mibps(float(sum(gk_total_num_g_bytes)) / len(gk_total_num_g_bytes), 15), 2)
+
+    print(str(gk_mibps_0) + "\t" + str(gk_mibps_50) + "\t" +
+            str(gk_mibps_99) + "\t" + str(gk_mibps_mean))
+
+#
 
 #
 # Process server/client measurements.
@@ -124,8 +153,77 @@ if client_log is not None:
     cli_mbps_99 = round(nbytes_to_mibps(numpy.percentile(cli_total_num_bytes, 99), 1), 2)
     cli_mbps_mean = round(nbytes_to_mibps(float(sum(cli_total_num_bytes)) / len(cli_total_num_bytes), 1), 2)
 
-    print(str(cli_mbps_0) + "\t" + str(cli_mbps_50) + "\t" +
-            str(cli_mbps_99) + "\t" + str(cli_mbps_mean))
+
+cli2_total_num_packets = []
+cli2_total_num_bytes = []
+
+if client2_log is not None:
+    with open(client2_log) as f:
+        first = True
+        prev_pkt = None
+        prev_byt = None
+        for line in f:
+            if line.startswith("        TX packets"):
+                tokens = line.split();
+                n_pkt = int(tokens[2])
+                n_byt = int(tokens[4])
+                if first:
+                    prev_pkt = n_pkt
+                    prev_byt = n_byt
+                    first = False
+                    continue
+                cli2_total_num_packets.append(n_pkt - prev_pkt)
+                cli2_total_num_bytes.append(n_byt - prev_byt)
+                prev_pkt = n_pkt
+                prev_byt = n_byt
+
+    print("Client measurements:")
+    cli2_total_num_packets = cli2_total_num_packets[3:-3]
+    cli2_total_num_bytes = cli2_total_num_bytes[3:-3]
+    print(cli2_total_num_bytes)
+    cli2_mbps_0 = round(nbytes_to_mibps(numpy.percentile(cli2_total_num_bytes, 0), 1), 2)
+    cli2_mbps_50 = round(nbytes_to_mibps(numpy.percentile(cli2_total_num_bytes, 50), 1), 2)
+    cli2_mbps_99 = round(nbytes_to_mibps(numpy.percentile(cli2_total_num_bytes, 99), 1), 2)
+    cli2_mbps_mean = round(nbytes_to_mibps(float(sum(cli2_total_num_bytes)) / len(cli2_total_num_bytes), 1), 2)
+
+
+print(str(cli_mbps_0 + cli2_mbps_0) + "\t" + str(cli_mbps_50 + cli2_mbps_50) + "\t" +
+    str(cli_mbps_99 + cli2_mbps_99) + "\t" + str(cli_mbps_mean + cli2_mbps_mean))
+
+router_total_num_packets = []
+router_total_num_bytes = []
+
+if router_log is not None:
+    with open(router_log) as f:
+        first = True
+        prev_pkt = None
+        prev_byt = None
+        for line in f:
+            if line.startswith("        TX packets"):
+                tokens = line.split();
+                n_pkt = int(tokens[2])
+                n_byt = int(tokens[4])
+                if first:
+                    prev_pkt = n_pkt
+                    prev_byt = n_byt
+                    first = False
+                    continue
+                router_total_num_packets.append(n_pkt - prev_pkt)
+                router_total_num_bytes.append(n_byt - prev_byt)
+                prev_pkt = n_pkt
+                prev_byt = n_byt
+
+    print("Router measurements:")
+    router_total_num_packets = router_total_num_packets[3:-3]
+    router_total_num_bytes = router_total_num_bytes[3:-3]
+    print(router_total_num_bytes)
+    router_mbps_0 = round(nbytes_to_mibps(numpy.percentile(router_total_num_bytes, 0), 5), 2)
+    router_mbps_50 = round(nbytes_to_mibps(numpy.percentile(router_total_num_bytes, 50), 5), 2)
+    router_mbps_99 = round(nbytes_to_mibps(numpy.percentile(router_total_num_bytes, 99), 5), 2)
+    router_mbps_mean = round(nbytes_to_mibps(float(sum(router_total_num_bytes)) / len(router_total_num_bytes), 5), 2)
+
+print(str(router_mbps_0) + "\t" + str(router_mbps_50) + "\t" +
+    str(router_mbps_99) + "\t" + str(router_mbps_mean))
 
 # Totals of packets and bytes for each measurement, i.e. index 0
 # holds the total packets and bytes sent at the first measurement, etc.
@@ -226,9 +324,12 @@ if legit_log is not None:
         if completed:
             num_completed += 1
             durations.append(duration_ms)
-        else:
-            durations.append(20000)
+#        else:
+#            durations.append(20000)
 
+    #print(sorted(durations))
+    # Remove outliers.
+    durations = sorted(durations)[2:-2]
     print("Completed " + str(num_completed) + " out of " + str(len(connections)) + " flows")
     duration_0 = round(numpy.percentile(durations, 0), 2)
     duration_50 = round(numpy.percentile(durations, 50), 2)

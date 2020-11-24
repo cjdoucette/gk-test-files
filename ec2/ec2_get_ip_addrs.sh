@@ -2,7 +2,7 @@
 
 key_name="gatekeeper.pem"
 
-nodes=(client gk1_server gk2_server gt_server router nat_server dest tcp)
+nodes=(client client2 gk1_server gk2_server gt_server router dest tcp)
 fname="ip_addrs.txt"
 
 rm -f ${fname}
