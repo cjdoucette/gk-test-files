@@ -33,19 +33,19 @@ for i in $(eval echo {1..$NUM_BOTS})
 do
   if [ $i -gt 10 ];
   then
-    sudo ./sendRawEthRandom $((3 + $i)) &
+    sudo ./sendRawEthRandom $((6 + $i)) &
   else
-    sudo ./sendRawEthRandom $((40 - $i)) &
+    sudo ./sendRawEthRandom $((48 - $i)) &
   fi
 done
 
 # Get stats every second until the experiment ends.
 for i in $(eval echo {1..$EXP_LEN})
 do
-  ifconfig | head -8 >> ../gatekeeper/${EXP_NAME}/stats_2.${TABLE_EXP}_${NUM_LCORES}lcore_${NUM_BOTS}bots_${TRIAL_NUM}.txt
+  ifconfig | grep "ens1f1" --after-context=6 >> ../gatekeeper/${EXP_NAME}/stats_2.${TABLE_EXP}_${NUM_LCORES}lcore_${NUM_BOTS}bots_${TRIAL_NUM}.txt
   sleep 1
 done
-ifconfig | head -8 >> ../gatekeeper/${EXP_NAME}/stats_2.${TABLE_EXP}_${NUM_LCORES}lcore_${NUM_BOTS}bots_${TRIAL_NUM}.txt
+ifconfig | grep "ens1f1" --after-context=6 >> ../gatekeeper/${EXP_NAME}/stats_2.${TABLE_EXP}_${NUM_LCORES}lcore_${NUM_BOTS}bots_${TRIAL_NUM}.txt
 
 sudo pkill sendRawEth
 sudo pkill gatekeeper
