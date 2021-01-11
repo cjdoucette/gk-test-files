@@ -5,8 +5,8 @@ if len(sys.argv) == 3:
     other_params = sys.argv[2]
 else:
     other_params = None
-rates = ['100mibps', '500mibps', '1gibps', '2gibps', '3gibps', '4gibps']
-#        '5gibps', '6gibps', '7gibps', '8gibps']
+rates = ['100mibps', '500mibps', '1gibps', '2gibps', '3gibps', '4gibps',
+    '5gibps', '6gibps', '7gibps', '8gibps']
 
 for rate in rates:
     if other_params is not None:

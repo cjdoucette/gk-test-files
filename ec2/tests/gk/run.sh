@@ -51,9 +51,9 @@ sleep 10
 ./ec2_send_command.sh router "nohup bash -c 'while true;   do date >> /home/ubuntu/router_ifconfig.txt && ifconfig | grep ens7 --after-context=8 >> /home/ubuntu/router_ifconfig.txt && sleep 5; done' &>/dev/null &"
 
 # Start attack traffic.
-./ec2_send_command.sh client "nohup bash -c 'cd raw-packets; sudo make; sudo ./sendRawGk 0 ${EXP_RATE}' &>/dev/null &"
+./ec2_send_command.sh client "nohup bash -c 'cd raw-packets; sudo make; sudo ./sendRawGk ${EXP_RATE}' &>/dev/null &"
 sleep 1
-./ec2_send_command.sh client2 "nohup bash -c 'cd raw-packets; sudo make; sudo ./sendRawGk 0 ${EXP_RATE}' &>/dev/null &"
+./ec2_send_command.sh client2 "nohup bash -c 'cd raw-packets; sudo make; sudo ./sendRawGk ${EXP_RATE}' &>/dev/null &"
 
 # Let attackers get up to speed.
 sleep 20
@@ -103,6 +103,7 @@ echo "Cleaning up ..."
 
 ./ec2_send_command.sh gk1_server "sudo pkill gatekeeper"
 ./ec2_send_command.sh gk1_server "sudo chmod ogu+r /home/ubuntu/gatekeeper/gatekeeper.log"
+
 ./ec2_get_file.sh gk1_server "/home/ubuntu/gatekeeper/gatekeeper.log" results/${EXP_NAME}/${RESULTS_NAME}
 ./ec2_send_command.sh gk1_server "sudo rm -rf /home/ubuntu/gatekeeper/gatekeeper.log"
 
@@ -110,4 +111,3 @@ echo "Instance restarting ..."
 sleep 60
 # Once the instance has had enough time, collect the server log.
 ./ec2_get_file.sh dest "/home/ubuntu/server_ifconfig.txt" results/${EXP_NAME}/${RESULTS_NAME}
-./ec2_get_file.sh dest "/home/ubuntu/pkt_dump.pcap" results/${EXP_NAME}/${RESULTS_NAME}
