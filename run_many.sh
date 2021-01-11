@@ -19,7 +19,7 @@ echo "| lcores | table size | GK Mpps rcvd (0%) | GK Mpps rcvd (50%) | GK Mpps r
 echo "|--------|------------|-------------------|--------------------|--------------------|---------------------|--------------------|---------------------|---------------------|----------------------|" >> ${EXP_OUTPUT}.log
 
 # Loop over lcores.
-for i in 5
+for i in 1
 do
   for j in 25
   do
@@ -32,7 +32,7 @@ do
     # Run experiment.
     pushd .
     cd ../gk-test-files
-    sudo ./run_test.sh ${EXP_NAME} ${j} ${i} ${NUM_BOTS} 300 1
+    sudo ./run_test.sh ${EXP_NAME} ${j} ${i} ${NUM_BOTS} 600 1
 
     echo "here 1"
     # Collect statistics.
